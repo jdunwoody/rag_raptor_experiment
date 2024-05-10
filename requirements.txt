@@ -1,0 +1,15 @@
+beautifulsoup4
+gpt4all
+langchain
+langchain_community
+langchain_core
+langchain_openai
+langchain_text_splitters
+langchainhub
+matplotlib
+numpy 
+pandas
+scikit-learn
+tiktoken
+umap-learn
+wheel
