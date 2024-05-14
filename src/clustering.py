@@ -7,7 +7,7 @@ import umap
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from sklearn.mixture import GaussianMixture
-from splitting import load_text_splits
+from tqdm import tqdm
 
 # https://github.com/langchain-ai/langchain/blob/master/cookbook/RAPTOR.ipynb
 
@@ -61,6 +61,7 @@ def perform_clustering(
     threshold: float,
 ) -> List[np.ndarray]:
     if len(embeddings) <= dim + 1:
+        print(f"insufficient data for clustering {len(embeddings)} for {dim+1}")
         # Avoid clustering when there's insufficient data
         return [np.array([0]) for _ in range(len(embeddings))]
 
@@ -114,25 +115,20 @@ def perform_clustering(
     return all_local_clusters
 
 
-def embed(cache_dir, texts, embd):
-    embed_path = cache_dir / "embeddings.npy"
+def perform_embedding(texts, embd):
+    text_embeddings = embd.embed_documents(texts)
 
-    if embed_path.exists():
-        text_embeddings_np = np.load(embed_path)
-    else:
-        print(f"Embedding {len(texts)}...")
-        text_embeddings = embd.embed_documents(texts)
-        print(f"Embedding done.")
-
-        text_embeddings_np = np.array(text_embeddings)
-        np.save(embed_path, text_embeddings_np)
+    text_embeddings_np = np.array(text_embeddings)
 
     return text_embeddings_np
 
 
-def embed_cluster_texts(cache_dir, texts, embd):
-    text_embeddings_np = embed(cache_dir=cache_dir, texts=texts, embd=embd)
-    cluster_labels = perform_clustering(text_embeddings_np, 10, 0.1)
+def embed_cluster_texts(cache_dir, texts, embd, level):
+    print(f"Embedding {len(texts)} cluster text")
+    text_embeddings_np = perform_embedding(texts=texts, embd=embd)
+    cluster_labels = perform_clustering(
+        embeddings=text_embeddings_np, dim=5, threshold=0.1
+    )
     df = pd.DataFrame()
     df["text"] = texts
     df["embd"] = list(text_embeddings_np)
@@ -148,7 +144,9 @@ def fmt_txt(df: pd.DataFrame) -> str:
 def embed_cluster_summarize_texts(
     cache_dir: Path, model, texts: List[str], level: int, embd
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    df_clusters = embed_cluster_texts(cache_dir=cache_dir, texts=texts, embd=embd)
+    df_clusters = embed_cluster_texts(
+        cache_dir=cache_dir, texts=texts, embd=embd, level=level
+    )
 
     expanded_list = []
 
@@ -164,9 +162,9 @@ def embed_cluster_summarize_texts(
 
     print(f"--Generated {len(all_clusters)} clusters--")
 
-    template = """Here is a sub-set of LangChain Expression Language doc. 
+    template = """Here is a sub-set of the python library documentation.
     
-    LangChain Expression Language provides a way to compose chain in LangChain.
+    Python is a popular programming language with many features.
     
     Give a detailed summary of the documentation provided.
     
@@ -193,7 +191,7 @@ def embed_cluster_summarize_texts(
     chain = prompt | model | StrOutputParser()
 
     summaries = []
-    for i in all_clusters:
+    for i in tqdm(all_clusters, desc="Summarising with LLM"):
         df_cluster = expanded_df[expanded_df["cluster"] == i]
         formatted_txt = fmt_txt(df_cluster)
         summaries.append(chain.invoke({"context": formatted_txt}))

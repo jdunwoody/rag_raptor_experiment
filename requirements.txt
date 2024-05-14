@@ -1,4 +1,5 @@
 beautifulsoup4
+chromadb
 gpt4all
 langchain
 langchain_community
