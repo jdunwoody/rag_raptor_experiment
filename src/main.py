@@ -69,10 +69,7 @@ def main():
 
     print("Loading text")
 
-    urls = [
-        "https://www.bloombergmedia.com/blog/",
-        "https://docs.haystack.deepset.ai/docs/intro",  # "https://openai.com/news/"
-    ]
+    urls = ["https://www.bloombergmedia.com/blog/", "https://au.finance.yahoo.com"]
 
     leaf_texts, texts_split = load_text_splits(cache_dir=cache_dir, urls=urls)
 
@@ -110,7 +107,7 @@ def main():
 
     print("RAG call")
     rag_result = rag_chain.invoke(
-        "How to define a RAG chain? Give me a specific code example."
+        "How is the Australian retail market faring, given international factors? Give a number of specific examples"
     )
 
     print("Output")
@@ -134,8 +131,6 @@ def main():
             "summary": summary_result.to_json(),
         }
 
-    import json
-
     clean_results = results
     # clean_results = "".join(results.splitlines())
     output_path = Path(__file__).parents[1] / "output" / "output.txt"
@@ -143,8 +138,6 @@ def main():
     output_path.write_text(clean_results)
     # with open("final_output.txt", mode="w") as f:
     # json.dump(final_results, f)
-
-    return result
 
 
 if __name__ == "__main__":

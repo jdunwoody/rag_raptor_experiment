@@ -83,7 +83,7 @@ def do_load_text_splits(cache_dir, urls):
     )
 
     text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=2000, chunk_overlap=0
+        chunk_size=200, chunk_overlap=0
     )
     texts_split = text_splitter.split_text(concatenated_content)
 

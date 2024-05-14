@@ -162,9 +162,9 @@ def embed_cluster_summarize_texts(
 
     print(f"--Generated {len(all_clusters)} clusters--")
 
-    template = """Here is a sub-set of the python library documentation.
-    
-    Python is a popular programming language with many features.
+    template = """Here is documents taken from bloomberg and yahoo finance websites.
+
+    They describe the current news around financial topics.
     
     Give a detailed summary of the documentation provided.
     
